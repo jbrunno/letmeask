@@ -1,36 +1,59 @@
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from "react-router-dom";
+import { FormEvent, useState } from "react";
 
-import illustrationImg from '../assets/images/illustration.svg'
-import logo from '../assets/images/logo.svg'
+import illustrationImg from "../assets/images/illustration.svg";
+import logoImg from "../assets/images/logo.svg";
 
-import { useAuth } from '../hooks/useAuth';
-import { Button } from '../components/Button';
+import "../styles/auth.scss";
+import { Button } from "../components/Button";
+import { database } from "../service/firebase";
 
-import '../styles/auth.scss';
+import { useAuth } from "../hooks/useAuth";
 
 export function NewRoom() {
-  const  { user } = useAuth()
+  const { user } = useAuth();
+  const history = useHistory();
+  const [newRoom, setNewRoom] = useState("");
+
+  async function hendleCreateRoom(event: FormEvent) {
+    event.preventDefault();
+
+    if (newRoom.trim() === "") {
+      return;
+    }
+
+    const roomRef = database.ref("rooms");
+
+    const firebaseRoom = await roomRef.push({
+      title: newRoom,
+      authorId: user?.id,
+    });
+
+    history.push(`/rooms/${firebaseRoom.key}`);
+  }
 
   return (
     <div id="page-auth">
       <aside>
-        <img src={illustrationImg} alt="Ilustação simbolizando perguntas e respostas" />
-        <strong>Crie salas de Q&amp;A ao-vivo</strong>
+        <img
+          src={illustrationImg}
+          alt="Ilustração simbolizando perguntas e respostas"
+        />
+        <strong> Crie salas de Q&amp;A ao-vivo</strong>
         <p>Tire as dúvidas da sua audiência em tempo-real</p>
       </aside>
       <main>
         <div className="main-content">
-          <img src={logo} alt="Letmeask" />
-          <h1>{user?.name}</h1>
+          <img src={logoImg} alt="Letmeask" />
           <h2>Criar uma nova sala</h2>
-          <form>
-          <input
-            type="text"
-            placeholder="Nome da sala"
+          <form onSubmit={hendleCreateRoom}>
+            <input
+              type="text"
+              placeholder="Nome da sala"
+              onChange={(event) => setNewRoom(event.target.value)}
+              value={newRoom}
             />
-            <Button type="submit">
-              Criar sala
-            </Button>
+            <Button type="submit">Criar sala</Button>
           </form>
           <p>
             Quer entrar em uma sala existente? <Link to="/">clique aqui</Link>
@@ -38,5 +61,5 @@ export function NewRoom() {
         </div>
       </main>
     </div>
-  )
+  );
 }
